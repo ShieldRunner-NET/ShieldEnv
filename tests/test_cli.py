@@ -39,3 +39,21 @@ def test_audit_json_reports_suppression_without_secret(tmp_path) -> None:
     assert payload["findings"] == []
     assert len(payload["suppressed"]) == 1
     assert fake_secret not in output
+
+
+def test_sarif_output_falls_back_when_relpath_fails(tmp_path, monkeypatch) -> None:
+    (tmp_path / "config.env").write_text(
+        "AWS_KEY=AKIA" + "1234567890ABCDEF\n",
+        encoding="utf-8",
+    )
+
+    def _raise_value_error(*_args, **_kwargs):
+        raise ValueError("path is on mount 'C:', start on mount 'D:'")
+
+    monkeypatch.setattr("shieldenv.cli.os.path.relpath", _raise_value_error)
+    result = CliRunner().invoke(main, ["scan", "--path", str(tmp_path), "--format", "sarif"])
+
+    assert result.exit_code == 1
+    payload = json.loads(result.stdout)
+    uri = payload["runs"][0]["results"][0]["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]
+    assert uri.endswith("/config.env")

@@ -89,6 +89,13 @@ def scan(path, format, verbose, audit):
 
 
 def _to_sarif(result):
+    def _sarif_uri(file_path):
+        try:
+            normalized = os.path.relpath(file_path)
+        except ValueError:
+            normalized = file_path
+        return Path(normalized).as_posix()
+
     return {
         "version": "2.1.0",
         "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
@@ -108,7 +115,7 @@ def _to_sarif(result):
                 "locations": [{
                     "physicalLocation": {
                         "artifactLocation": {
-                            "uri": Path(os.path.relpath(finding.file)).as_posix()
+                            "uri": _sarif_uri(finding.file)
                         },
                         "region": {"startLine": finding.line},
                     }
