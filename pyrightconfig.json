@@ -1,0 +1,12 @@
+{
+    "extraPaths": [
+        "."
+    ],
+    "exclude": [
+        "build",
+        "full-stack-fastapi-template",
+        "juice-shop",
+        "venv",
+        ".venv"
+    ]
+}
