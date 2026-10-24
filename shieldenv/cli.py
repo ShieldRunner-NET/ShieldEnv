@@ -1,3 +1,4 @@
+import codecs
 import json
 import os
 import shlex
@@ -7,6 +8,30 @@ from pathlib import Path
 import click
 
 from .scanner import scan_path
+
+
+def _configure_utf8_stream(stream):
+    """Use UTF-8 for real Windows streams without disrupting Click capture."""
+    if sys.platform != "win32":
+        return stream
+
+    reconfigure = getattr(stream, "reconfigure", None)
+    if reconfigure is not None:
+        try:
+            reconfigure(encoding="utf-8", errors="strict")
+            return stream
+        except (AttributeError, OSError, ValueError):
+            pass
+
+    buffer = getattr(stream, "buffer", None)
+    if buffer is not None:
+        return codecs.getwriter("utf-8")(buffer, "strict")
+    return stream
+
+
+def _configure_utf8_streams():
+    sys.stdout = _configure_utf8_stream(sys.stdout)
+    sys.stderr = _configure_utf8_stream(sys.stderr)
 
 
 def safe_echo(message="", **kwargs):
@@ -20,6 +45,7 @@ def safe_echo(message="", **kwargs):
 @click.group()
 def main():
     """ShieldEnv: A local-first security scanner for hardcoded secrets and API keys."""
+    _configure_utf8_streams()
 
 @main.command()
 @click.option("--path", default=".", help="Root directory to scan for secrets.")
@@ -108,7 +134,7 @@ def _to_sarif(result):
                 "locations": [{
                     "physicalLocation": {
                         "artifactLocation": {
-                            "uri": Path(os.path.relpath(finding.file)).as_posix()
+                            "uri": _relative_path_uri(finding.file)
                         },
                         "region": {"startLine": finding.line},
                     }
@@ -116,6 +142,15 @@ def _to_sarif(result):
             } for finding in result.violations],
         }],
     }
+
+
+def _relative_path_uri(file_path: str) -> str:
+    path = Path(file_path)
+    try:
+        return path.resolve().relative_to(Path.cwd().resolve()).as_posix()
+    except ValueError:
+        return path.as_posix()
+
 
 @main.command()
 @click.option("--force", is_flag=True, help="Back up and replace an existing pre-commit hook.")
