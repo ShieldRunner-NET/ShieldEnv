@@ -59,7 +59,7 @@ def scan(path, format, verbose, audit):
             }
         safe_echo(json.dumps(payload, indent=2))
         if violations:
-            sys.exit(1)
+            raise click.exceptions.Exit(1)
         return
 
     if not violations:
@@ -85,7 +85,7 @@ def scan(path, format, verbose, audit):
         safe_echo(f"Files scanned: {result.files_scanned}")
         
     safe_echo("\n🚫 Commit/Build BLOCKED. Remove secrets, use environment variables, or update .shieldignore.")
-    sys.exit(1)
+    raise click.exceptions.Exit(1)
 
 
 def _to_sarif(result):
@@ -124,7 +124,7 @@ def install(force):
     git_dir = Path(".git")
     if not git_dir.exists():
         safe_echo("❌ Error: Not a git repository. Run 'git init' first.")
-        sys.exit(1)
+        raise click.exceptions.Exit(1)
 
     hook_path = git_dir / "hooks" / "pre-commit"
     if hook_path.exists() and not force:
@@ -156,7 +156,7 @@ exec {command} scan
         safe_echo("✅ Successfully installed ShieldEnv git pre-commit hook!")
     except OSError as e:
         safe_echo(f"❌ Failed to install hook: {e}")
-        sys.exit(1)
+        raise click.exceptions.Exit(1)
 
 if __name__ == "__main__":
     main()
