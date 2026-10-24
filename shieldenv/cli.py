@@ -119,37 +119,44 @@ def _to_sarif(result):
         "version": "2.1.0",
         "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
         "runs": [{
-            "tool": {"driver": {
-                "name": "ShieldEnv",
-                "informationUri": "https://github.com/ShieldHQ/shieldenv",
-                "rules": [
-                    {"id": finding.type, "name": finding.type}
-                    for finding in result.violations
-                ],
-            }},
-            "results": [{
-                "ruleId": finding.type,
-                "level": "error" if finding.confidence == "high" else "warning",
-                "message": {"text": f"Potential secret detected ({finding.confidence} confidence)."},
-                "locations": [{
-                    "physicalLocation": {
-                        "artifactLocation": {
-                            "uri": _relative_path_uri(finding.file)
-                        },
-                        "region": {"startLine": finding.line},
-                    }
-                }],
-            } for finding in result.violations],
-        }],
+            "tool": {
+                "driver": {
+                    "name": "ShieldEnv",
+                    "informationUri": "https://github.com/ShieldHQ/shieldenv",
+                    "rules": [
+                        {"id": finding.type, "name": finding.type}
+                        for finding in result.violations
+                    ],
+                }
+            },
+            "results": [
+                {
+                    "ruleId": finding.type,
+                    "level": "error" if finding.confidence == "high" else "warning",
+                    "message": {"text": f"Potential secret detected ({finding.confidence} confidence)."},
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uri": _sarif_uri(finding.file)
+                                },
+                                "region": {"startLine": finding.line}
+                            }
+                        }
+                    ]
+                }
+                for finding in result.violations
+            ]
+        }]
     }
 
 
-def _relative_path_uri(file_path: str) -> str:
-    path = Path(file_path)
+def _sarif_uri(file_path: str) -> str:
     try:
-        return path.resolve().relative_to(Path.cwd().resolve()).as_posix()
+        normalized = os.path.relpath(file_path)
     except ValueError:
-        return path.as_posix()
+        normalized = file_path
+    return Path(normalized).as_posix()
 
 
 @main.command()
