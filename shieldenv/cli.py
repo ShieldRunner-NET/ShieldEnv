@@ -115,43 +115,40 @@ def scan(path, format, verbose, audit):
 
 
 def _to_sarif(result):
-    def _sarif_uri(file_path):
-        try:
-            normalized = os.path.relpath(file_path)
-        except ValueError:
-            normalized = file_path
-        return Path(normalized).as_posix()
-
     return {
         "version": "2.1.0",
         "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
         "runs": [{
-            "tool": {"driver": {
-                "name": "ShieldEnv",
-                "informationUri": "https://github.com/ShieldHQ/shieldenv",
-                "rules": [
-                    {"id": finding.type, "name": finding.type}
-                    for finding in result.violations
-                ],
-            }},
-            "results": [
-        {
-            "ruleId": finding.type,
-            "level": "error" if finding.confidence == "high" else "warning",
-            "message": {"text": f"Potential secret detected ({finding.confidence} confidence)."},
-            "locations": [
-                {
-                    "physicalLocation": {
-                        "artifactLocation": {
-                            "uri": _sarif_uri(finding.file)
-                        },
-                        "region": {"startLine": finding.line}
-                    }
+            "tool": {
+                "driver": {
+                    "name": "ShieldEnv",
+                    "informationUri": "https://github.com/ShieldHQ/shieldenv",
+                    "rules": [
+                        {"id": finding.type, "name": finding.type}
+                        for finding in result.violations
+                    ],
                 }
+            },
+            "results": [
+                {
+                    "ruleId": finding.type,
+                    "level": "error" if finding.confidence == "high" else "warning",
+                    "message": {"text": f"Potential secret detected ({finding.confidence} confidence)."},
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uri": _sarif_uri(finding.file)
+                                },
+                                "region": {"startLine": finding.line}
+                            }
+                        }
+                    ]
+                }
+                for finding in result.violations
             ]
-        }
-        for finding in result.violations
-    ]
+        }]
+    }
 
 
 def _sarif_uri(file_path: str) -> str:
