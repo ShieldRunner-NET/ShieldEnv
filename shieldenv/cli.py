@@ -134,26 +134,32 @@ def _to_sarif(result):
                     for finding in result.violations
                 ],
             }},
-            "results": [{
-                "ruleId": finding.type,
-                "level": "error" if finding.confidence == "high" else "warning",
-                "message": {"text": f"Potential secret detected ({finding.confidence} confidence)."},
-                "locations": [{
-    "physicalLocation": {
-        "artifactLocation": {
-            "uri": _relative_path_uri(finding.file)
+            "results": [
+        {
+            "ruleId": finding.type,
+            "level": "error" if finding.confidence == "high" else "warning",
+            "message": {"text": f"Potential secret detected ({finding.confidence} confidence)."},
+            "locations": [
+                {
+                    "physicalLocation": {
+                        "artifactLocation": {
+                            "uri": _sarif_uri(finding.file)
+                        },
+                        "region": {"startLine": finding.line}
+                    }
+                }
+            ]
         }
-    },
-    "region": {"startLine": finding.line}
-}] for finding in result.violations
+        for finding in result.violations
+    ]
 
 
-def _relative_path_uri(file_path: str) -> str:
-    path = Path(file_path)
+def _sarif_uri(file_path: str) -> str:
     try:
-        return path.resolve().relative_to(Path.cwd().resolve()).as_posix()
+        normalized = os.path.relpath(file_path)
     except ValueError:
-        return path.as_posix()
+        normalized = file_path
+    return Path(normalized).as_posix()
 
 
 @main.command()
