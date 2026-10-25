@@ -7,5 +7,5 @@
 
 ## Reporting a Vulnerability
 If you discover a security vulnerability within ShieldEnv, please report it privately. Do not open a public issue.
-- Email: your-security-contact@email.com
+- Email: shieldrunner.net@gmail.com
 - We aim to acknowledge reports within 48 hours and provide a patch rapidly.
