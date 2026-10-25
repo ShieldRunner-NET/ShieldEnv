@@ -1,8 +1,10 @@
-# ShieldEnv
+# ShieldEnv 🛡️
+Local-First Secret Scanning & Pre-Commit Guardraill
 
-Local-first secret scanning and pre-commit protection for Python repositories and CI pipelines.
+ShieldEnv is an open-source security engine designed to eliminate accidental credential leaks, API key exposures, and compliance violations before code ever hits version control.
 
-ShieldEnv detects common API keys, credentials, private keys, database URLs, and high-entropy custom tokens without printing full secret values.
+### Why Local-First?
+Unlike cloud-based PR scanners that analyze your code after it leaves your machine, ShieldEnv runs entirely local-first. Zero code, environment variables, or tokens ever leave your local environment.
 
 ## Features
 
