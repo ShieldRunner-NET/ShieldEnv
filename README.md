@@ -1,15 +1,16 @@
 # ShieldEnv 🛡️
-Local-First Secret Scanning & Pre-Commit Guardraill
+**Local-First Secret Scanning & Pre-Commit Guardrail**
 
 ShieldEnv is an open-source security engine designed to eliminate accidental credential leaks, API key exposures, and compliance violations before code ever hits version control.
 
-### Why Local-First?
-Unlike cloud-based PR scanners that analyze your code after it leaves your machine, ShieldEnv runs entirely local-first. Zero code, environment variables, or tokens ever leave your local environment.
+## Why Local-First?
+
+Unlike cloud-based PR scanners that analyze your code after it leaves your machine, ShieldEnv runs entirely local-first. **Zero code, environment variables, or tokens ever leave your local environment.**
 
 ## Features
 
 - Regex detection for OpenAI, Anthropic, Google, AWS, GitHub, Slack, database URLs, private keys, and generic secret assignments.
-- Provider rules include confidence levels (`high` or `medium`).
+- Provider rules include confidence levels (high or medium).
 - Entropy-based detection for literal custom tokens.
 - Built-in filtering for placeholders, environment substitutions, templates, and common generated/UI syntax.
 - Project and user-level `.shieldignore` support.
@@ -19,18 +20,42 @@ Unlike cloud-based PR scanners that analyze your code after it leaves your machi
 
 ## Installation
 
-Create an environment and install ShieldEnv:
+### Option 1: Global Installation via PyPI (Recommended)
+
+Install ShieldEnv globally from the Python Package Index:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e ".[dev]"
+pip install shieldenv
 ```
 
-On Windows PowerShell, activate with:
+### Option 2: Installation from Source (For Development)
+
+Clone the repository and set up a development environment:
+
+```bash
+git clone https://github.com/ShieldRunner-NET/ShieldEnv.git
+cd ShieldEnv
+python -m venv .venv
+```
+
+Activate the virtual environment:
+
+On Linux/macOS:
+
+```bash
+source .venv/bin/activate
+```
+
+On Windows PowerShell:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
+```
+
+Install in editable development mode with dev dependencies:
+
+```bash
+python -m pip install -e ".[dev]"
 ```
 
 ## Usage
@@ -57,14 +82,23 @@ Use verbose mode to inspect scan coverage and ignored paths:
 
 ```bash
 shieldenv scan --verbose
+```
+
+Run audit checks with JSON output:
+
+```bash
 shieldenv scan --audit --format json
 ```
 
-Exit codes:
+### Exit Codes
 
-- `0`: no findings and no scan errors.
-- `1`: one or more potential secrets were found.
-- `2`: one or more files could not be read.
+```text
+0: No findings and no scan errors.
+1: One or more potential secrets were found.
+2: One or more files could not be read.
+```
+
+## Git Pre-Commit Integration
 
 Install a Git pre-commit hook from the repository root:
 
@@ -72,15 +106,15 @@ Install a Git pre-commit hook from the repository root:
 shieldenv install
 ```
 
-ShieldEnv will not overwrite an existing hook unless explicitly requested:
+ShieldEnv will not overwrite an existing hook unless explicitly requested using `--force`:
 
 ```bash
 shieldenv install --force
 ```
 
-With `--force`, an existing hook is saved as `.git/hooks/pre-commit.shieldenv-backup`.
+With `--force`, an existing hook is safely saved as `.git/hooks/pre-commit.shieldenv-backup`.
 
-## Ignore rules
+## Ignore Rules
 
 ShieldEnv skips common dependency, build, cache, and lock-file paths by default. Add a project-level `.shieldignore` at the root being scanned, or a global `~/.shieldignore`, with one rule per line:
 
@@ -95,20 +129,26 @@ frontend/generated/**
 
 Blank lines and lines beginning with `#` are ignored. Use ignore rules carefully: excluded files are not scanned. `--verbose` lists ignored paths so exclusions can be reviewed.
 
+## Inline Suppressions
+
 To suppress a deliberate test value on one line, use the explicit marker:
 
 ```python
 TEST_TOKEN = "not-a-credential"  # shieldenv: ignore
 ```
 
-Suppressions are recorded in audit JSON output. Keep suppressions rare and review them during code review.
+Suppressions are recorded in audit JSON output. Keep suppressions rare and review them carefully during code review.
 
-## Development
+## Development & Testing
+
+Run unit tests and lint checks locally:
 
 ```bash
 python -m pytest
 ruff check .
 ```
+
+## Security Notice & Limitations
 
 ShieldEnv is heuristic-based and should complement, not replace, secret rotation and incident-response procedures. Review findings and maintain project-specific ignore rules for generated code.
 
